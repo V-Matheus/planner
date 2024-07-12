@@ -58,7 +58,7 @@ export function CreateTripPage() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-zinc-950 text-zinc-50 antialiased bg-pattern bg-norepeat bg-center">
+    <div className="h-screen flex items-center justify-center antialiased bg-pattern bg-norepeat bg-center">
       <div className="max-w-3xl w-full px-6 text-center space-y-10">
         <div className="flex flex-col items-center gap-3">
           <img src="/logo.svg" alt="plann.er" />
