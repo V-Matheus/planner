@@ -8,16 +8,19 @@ import 'react-day-picker/dist/style.css';
 interface DestinationAndDateStepProps {
   isGuestsInputOpen: boolean;
   toggleGuestsInput: () => void;
+  setDestination: (destination: string) => void;
+  setEventStartAndEndDates: (dates: DateRange | undefined) => void;
+  eventStartAndEndDates: DateRange | undefined;
 }
 
 export function DestinationAndDateStep({
   isGuestsInputOpen,
   toggleGuestsInput,
+  setDestination,
+  setEventStartAndEndDates,
+  eventStartAndEndDates,
 }: DestinationAndDateStepProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [eventStartAndEndDates, setEventStartAndEndDates] = useState<
-    DateRange | undefined
-  >();
 
   function toggleDatepicker() {
     setIsDatePickerOpen(!isDatePickerOpen);
@@ -41,6 +44,7 @@ export function DestinationAndDateStep({
           placeholder="Para onde você vai?"
           className="bg-transparent text-lg placeholder:text-zinc-400 outline-none flex-1"
           disabled={isGuestsInputOpen}
+          onChange={(event) => setDestination(event.target.value)}
         />
       </div>
       <button
