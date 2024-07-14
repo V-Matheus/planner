@@ -5,6 +5,11 @@ import { prisma } from '../lib/prisma';
 import dayjs from 'dayjs';
 import nodemailer from 'nodemailer';
 import { getMailClient } from '../lib/mail';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import 'dayjs/locale/pt-br'
+
+dayjs.locale('pt-br')
+dayjs.extend(localizedFormat);
 
 export async function createTrip(app: FastifyInstance) {
   app.withTypeProvider<ZodTypeProvider>().post(
@@ -17,12 +22,19 @@ export async function createTrip(app: FastifyInstance) {
           ends_at: z.coerce.date(),
           owner_name: z.string(),
           owner_email: z.string().email(),
+          emails_to_invite: z.array(z.string().email()),
         }),
       },
     },
     async (request) => {
-      const { destination, ends_at, starts_at, owner_name, owner_email } =
-        request.body;
+      const {
+        destination,
+        ends_at,
+        starts_at,
+        owner_name,
+        owner_email,
+        emails_to_invite,
+      } = request.body;
 
       if (
         dayjs(starts_at).isBefore(new Date()) ||
@@ -36,8 +48,28 @@ export async function createTrip(app: FastifyInstance) {
           destination,
           ends_at,
           starts_at,
+          participants: {
+            createMany: {
+              data: [
+                {
+                  name: owner_name,
+                  email: owner_email,
+                  is_owner: true,
+                  is_confirmed: true,
+                },
+                ...emails_to_invite.map((email) => {
+                  return { email };
+                }),
+              ],
+            },
+          },
         },
       });
+
+      const formatedStartDate = dayjs(starts_at).format('LL');
+      const formatedEndDate = dayjs(ends_at).format('LL');
+
+      const confirmatinoLink = `http://localhost:3333/trips/${trip.id}/confirm`
 
       const mail = await getMailClient();
 
@@ -50,8 +82,28 @@ export async function createTrip(app: FastifyInstance) {
           name: owner_name,
           address: owner_email,
         },
-        subject: 'Testando envio de e-mail',
-        html: `<p>Teste do envio de e-mail</p>`,
+        subject: `Confirme sua viagem para ${destination} em ${formatedStartDate}`,
+        html: `
+          <div style='font-family: sans-serif; font-size: 16px; line-height: 1.6;'>
+            <p>Você foi convidado(a) para participar de uma viagem para <strong>${destination}</strong> nas datas de <strong>${formatedStartDate}</strong> até <strong>${formatedEndDate}</strong>.</p>
+
+            <p></p>
+
+            <p>Para confirmar sua presença na viagem, clique no link abaixo:</p>
+
+            <p></p>
+
+            <p>
+             <a href="${confirmatinoLink}">Confirmar presença</a>
+            </p>
+
+            <p></p>
+
+            <p>Caso esteja usando o dispositivo móvel, você também pode confirmar presença pelos aplicativos:</p>
+
+            <p>Caso você não saiba do que se trata esse e-mail ou não poderá estar presente, apenas ignore esse e-mail.</p>
+          </div>
+        `.trim(),
       });
 
       console.log(nodemailer.getTestMessageUrl(message));
