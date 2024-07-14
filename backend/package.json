@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch --env-file .env src/server.ts"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
